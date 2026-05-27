@@ -1,0 +1,20 @@
+apiVersion: argoproject.io/v1alpha1
+kind: Application
+metadata:
+  name: app-b
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/degwinthegreat/k8s_learning
+    targetRevision: HEAD
+    path: manifets/app-b
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-b
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
