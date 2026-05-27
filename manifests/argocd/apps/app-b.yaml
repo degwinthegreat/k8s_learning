@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/degwinthegreat/k8s_learning
     targetRevision: HEAD
-    path: manifets/app-b
+    path: manifests/app-b
   destination:
     server: https://kubernetes.default.svc
     namespace: app-b
