@@ -9,6 +9,11 @@ spec:
   provider:
     type: Kubernetes
     kubernetes:
+      # extraPortMappingsを持つノードに固定する(kind-config.yamlのラベル参照)
+      envoyDeployment:
+        pod:
+          nodeSelector:
+            ingress-ready: "true"
       envoyService:
         type: NodePort
         patch:
