@@ -16,7 +16,8 @@ kind create cluster --name k8s-learning --config cluster/kind-config.yaml
 
 ```sh
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.2/manifests/install.yaml
+# ApplicationSetのCRDがclient-side applyのアノテーション上限を超えるためserver-sideで適用する
+kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.2/manifests/install.yaml
 kubectl -n argocd wait --for=condition=Available deployment --all --timeout=300s
 ```
 
