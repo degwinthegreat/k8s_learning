@@ -1,0 +1,13 @@
+# ArgoCD本体の設定。install.yamlが作る空のargocd-cmをroot Application経由で上書き管理する
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Backstage(Roadie ArgoCDプラグイン)がAPIトークンで読み取るためのローカルアカウント。
+  # トークンの発行は手動(READMEの手順を参照)
+  accounts.backstage: apiKey

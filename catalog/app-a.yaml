@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: app-a
+  description: 学習用ワークロードApp-A (whoami)
+  annotations:
+    # Roadie ArgoCDプラグインが同期状態を表示するためのApplication名
+    argocd/app-name: app-a
+    backstage.io/source-location: url:https://github.com/degwinthegreat/k8s_learning/tree/main/manifests/app-a/
+spec:
+  type: service
+  lifecycle: experimental
+  owner: guests

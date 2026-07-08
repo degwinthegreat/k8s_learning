@@ -1,0 +1,57 @@
+app:
+  # app-backendプラグインがフロントエンドを同一オリジンで配信する
+  baseUrl: http://backstage.localhost
+
+backend:
+  baseUrl: http://backstage.localhost
+  listen: ':7007'
+  cors:
+    origin: http://backstage.localhost
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  auth:
+    keys:
+      - secret: ${BACKEND_SECRET}
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+
+auth:
+  providers:
+    guest:
+      # 学習環境のためproductionビルドでもゲストログインを許可する
+      dangerouslyAllowOutsideDevelopment: true
+
+techdocs:
+  builder: 'local'
+  generator:
+    # コンテナ内にDockerがないためローカル生成にする
+    runIn: 'local'
+  publisher:
+    type: 'local'
+
+catalog:
+  locations:
+    # サンプルの組織データ(guestsグループ)は所有者参照のために残す
+    - type: file
+      target: ./examples/org.yaml
+      rules:
+        - allow: [User, Group]
+    # 稼働中のワークロードをComponentとして登録する
+    - type: url
+      target: https://github.com/degwinthegreat/k8s_learning/blob/main/catalog/app-a.yaml
+    - type: url
+      target: https://github.com/degwinthegreat/k8s_learning/blob/main/catalog/app-b.yaml
+
+# Roadie ArgoCDプラグイン: クラスター内のargocd-serverからアプリの同期状態を取得する
+argocd:
+  appLocatorMethods:
+    - type: 'config'
+      instances:
+        - name: argocd
+          url: https://argocd-server.argocd.svc.cluster.local
+          token: ${ARGOCD_AUTH_TOKEN}

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage
+  namespace: backstage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backstage
+  template:
+    metadata:
+      labels:
+        app: backstage
+    spec:
+      containers:
+      - name: backstage
+        # ローカルビルドしてkind loadで配布する(READMEの手順を参照)
+        image: backstage:0.1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7007
+        env:
+        - name: POSTGRES_HOST
+          value: postgres
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: backstage
+        # argocd-serverの自己署名証明書を許容する(学習環境のみ。本番は正規のCAを使う)
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: "0"
+        envFrom:
+        - secretRef:
+            # 手動作成するSecret(READMEの手順を参照)
+            # POSTGRES_PASSWORD / BACKEND_SECRET / ARGOCD_AUTH_TOKEN
+            name: backstage-secrets
+        readinessProbe:
+          httpGet:
+            path: /.backstage/health/v1/readiness
+            port: 7007
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /.backstage/health/v1/liveness
+            port: 7007
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 250m
+          limits:
+            memory: 1Gi
