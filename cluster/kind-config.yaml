@@ -2,5 +2,13 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
+  # Envoy GatewayのNodePort(30080/30443)をホストの80/443に公開する
+  extraPortMappings:
+  - containerPort: 30080
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 30443
+    hostPort: 443
+    protocol: TCP
 - role: worker
 - role: worker

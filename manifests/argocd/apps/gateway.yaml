@@ -1,24 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-a
+  name: gateway
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/degwinthegreat/k8s_learning
     targetRevision: HEAD
-    path: manifests/app-a
+    path: manifests/gateway
   destination:
     server: https://kubernetes.default.svc
-    namespace: app-a
+    namespace: envoy-gateway-system
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-    # クラスター再作成時、Gateway APIのCRD導入完了までHTTPRouteの同期に失敗するためリトライする
+    # envoy-gateway ApplicationがCRDを入れ終わるまで同期に失敗するためリトライする
     retry:
       limit: 10
       backoff:

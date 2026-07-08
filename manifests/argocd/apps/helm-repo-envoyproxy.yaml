@@ -1,0 +1,14 @@
+# Envoy GatewayのHelmチャートはOCIレジストリ配布のため、
+# ArgoCDにOCI Helmリポジトリとして登録する(公開リポジトリ・資格情報なし)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: helm-repo-envoyproxy
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: envoyproxy
+  url: registry-1.docker.io/envoyproxy
+  type: helm
+  enableOCI: "true"

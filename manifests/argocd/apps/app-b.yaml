@@ -18,3 +18,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    # クラスター再作成時、Gateway APIのCRD導入完了までHTTPRouteの同期に失敗するためリトライする
+    retry:
+      limit: 10
+      backoff:
+        duration: 15s
+        factor: 2
+        maxDuration: 3m
