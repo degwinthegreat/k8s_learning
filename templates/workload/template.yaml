@@ -1,0 +1,69 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: workload
+  title: 学習用ワークロード (Golden Path)
+  description: |
+    Platform Componentをフル活用したワークロード一式
+    (Rollout・Service・HTTPRoute・ScaledObject・ArgoCD Application・カタログ登録)
+    をGitOpsリポジトリへのPull Requestとして生成する。
+    マージするとApp of Apps経由で自動デプロイされ、カタログにも自動登録される。
+  tags:
+    - kubernetes
+    - gitops
+spec:
+  owner: guests
+  type: service
+  parameters:
+    - title: ワークロードの情報
+      required:
+        - name
+      properties:
+        name:
+          title: 名前
+          type: string
+          description: リソース名・Namespace・ホスト名(<name>.localhost)に使われる
+          # DNS-1123ラベル(NamespaceやService名の制約)に合わせる
+          pattern: '^[a-z0-9]([a-z0-9-]{0,20}[a-z0-9])?$'
+          maxLength: 22
+          ui:autofocus: true
+        description:
+          title: 説明
+          type: string
+          default: 学習用ワークロード
+        image:
+          title: コンテナイメージ
+          type: string
+          description: 80番ポートでHTTPを配信するイメージ
+          default: traefik/whoami
+  steps:
+    - id: fetch
+      name: マニフェスト一式を生成
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          image: ${{ parameters.image }}
+    - id: publish
+      name: GitOpsリポジトリへPRを作成
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=degwinthegreat&repo=k8s_learning
+        branchName: golden-path/${{ parameters.name }}
+        # 同名ブランチが残っていた場合は上書き更新する(テンプレート再実行に対応)
+        update: true
+        title: 'Golden Path: ${{ parameters.name }} を追加'
+        description: |
+          Backstage Software Template (workload) が生成したワークロード一式です。
+
+          - `manifests/${{ parameters.name }}/` — Rollout・Service・HTTPRoute・ScaledObject
+          - `manifests/argocd/apps/${{ parameters.name }}.yaml` — ArgoCD Application (App of Appsが検出)
+          - `catalog/${{ parameters.name }}.yaml` — カタログ登録 (ワイルドカードlocationが検出)
+
+          マージすると自動でデプロイ・カタログ登録されます。
+  output:
+    links:
+      - title: Pull Request
+        url: ${{ steps.publish.output.remoteUrl }}

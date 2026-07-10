@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.name }}
+spec:
+  # replicasはKEDA(が作るHPA)が管理するため宣言しない。
+  # Gitに書くとArgoCDのselfHealがスケール結果を巻き戻してしまう
+  selector:
+    matchLabels:
+      app: ${{ values.name }}
+  strategy:
+    canary:
+      # トラフィック分割は使わず、レプリカ比率でカナリアを進める
+      steps:
+        - setWeight: 50
+        - pause:
+            duration: 30s
+  template:
+    metadata:
+      labels:
+        app: ${{ values.name }}
+    spec:
+      containers:
+        - name: ${{ values.name }}
+          image: ${{ values.image }}
+          ports:
+            - containerPort: 80

@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${{ values.name }}
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/degwinthegreat/k8s_learning
+    targetRevision: HEAD
+    path: manifests/${{ values.name }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${{ values.name }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    # クラスター再作成時、Gateway API・Argo Rollouts・KEDAのCRD導入完了まで同期に失敗するためリトライする
+    retry:
+      limit: 10
+      backoff:
+        duration: 15s
+        factor: 2
+        maxDuration: 3m

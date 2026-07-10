@@ -20,6 +20,12 @@ backend:
       user: ${POSTGRES_USER}
       password: ${POSTGRES_PASSWORD}
 
+# Scaffolder(PR作成)とカタログのワイルドカードlocation解決に使う
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
 auth:
   providers:
     guest:
@@ -41,11 +47,16 @@ catalog:
       target: ./examples/org.yaml
       rules:
         - allow: [User, Group]
-    # 稼働中のワークロードをComponentとして登録する
+    # 稼働中のワークロードをComponentとして登録する。
+    # ワイルドカードにより、Golden PathのPRマージで増えたcatalog/*.yamlも自動登録される
+    # (個人アカウントのリポジトリはGitHub org discoveryが使えないためglob locationで代替)
     - type: url
-      target: https://github.com/degwinthegreat/k8s_learning/blob/main/catalog/app-a.yaml
+      target: https://github.com/degwinthegreat/k8s_learning/blob/main/catalog/*.yaml
+    # Golden PathのSoftware Template
     - type: url
-      target: https://github.com/degwinthegreat/k8s_learning/blob/main/catalog/app-b.yaml
+      target: https://github.com/degwinthegreat/k8s_learning/blob/main/templates/workload/template.yaml
+      rules:
+        - allow: [Template]
 
 # Roadie ArgoCDプラグイン: クラスター内のargocd-serverからアプリの同期状態を取得する
 argocd:

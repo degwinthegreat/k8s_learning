@@ -1,0 +1,22 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.name }}
+spec:
+  scaleTargetRef:
+    # Rolloutはscaleサブリソースを持つためKEDA(HPA)でスケールできる
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: ${{ values.name }}
+  minReplicaCount: 1
+  maxReplicaCount: 3
+  triggers:
+    # クラスターにmetrics-serverが無いためCPUトリガーは使えない。
+    # 確定的に動作を確認できるcronトリガー(日中だけスケールアウト)を使う
+    - type: cron
+      metadata:
+        timezone: Asia/Tokyo
+        start: 0 9 * * *
+        end: 0 18 * * *
+        desiredReplicas: "3"

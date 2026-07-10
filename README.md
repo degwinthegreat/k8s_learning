@@ -57,7 +57,8 @@ kubectl config set-context --current --namespace=default
 kubectl -n backstage create secret generic backstage-secrets \
   --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16) \
   --from-literal=BACKEND_SECRET=$(openssl rand -base64 24) \
-  --from-literal=ARGOCD_AUTH_TOKEN=$ARGOCD_TOKEN
+  --from-literal=ARGOCD_AUTH_TOKEN=$ARGOCD_TOKEN \
+  --from-literal=GITHUB_TOKEN=$(gh auth token)
 ```
 
 Secret作成前はBackstageとPostgreSQLのPodが `CreateContainerConfigError` で待機するが、作成後に自動で起動する。
@@ -86,5 +87,20 @@ kubectl -n argocd port-forward svc/argocd-server 8080:443
 | backstage-secrets | backstage | POSTGRES_PASSWORD | BackstageのPostgreSQL接続 |
 | backstage-secrets | backstage | BACKEND_SECRET | Backstageバックエンドのサービス間認証鍵 |
 | backstage-secrets | backstage | ARGOCD_AUTH_TOKEN | Roadie ArgoCDプラグインの読み取りアクセス(backstageアカウント・role:readonly) |
+| backstage-secrets | backstage | GITHUB_TOKEN | ScaffolderのPR作成とカタログ取得(`repo`スコープのPAT。`gh auth token`で流用可) |
 
-Golden Path導入時にGitHub PAT(`GITHUB_TOKEN`)が加わる予定。
+## Golden Path (Software Template)
+
+Backstageの「Create」から **学習用ワークロード (Golden Path)** テンプレートを実行すると、
+Rollout・Service・HTTPRoute・ScaledObject・ArgoCD Application・カタログ登録の一式が
+このリポジトリへのPull Requestとして生成される([templates/workload/](templates/workload/))。
+
+マージ後は人手の操作は不要:
+
+1. root Application(App of Apps)が `manifests/argocd/apps/` の新しいApplicationを検出してデプロイ
+2. カタログのワイルドカードlocation(`catalog/*.yaml`)が新しいComponentを自動登録
+3. `http://<name>.localhost/` で到達確認できる
+
+Backstageの設定([app-config.production.yaml](backstage/app-config.production.yaml))は
+イメージに焼き込まれるため、設定変更時は手順2の再ビルドとロード、
+`kubectl -n backstage rollout restart deployment backstage` が必要。
