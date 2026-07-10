@@ -13,6 +13,22 @@ spec:
       labels:
         app: backstage
     spec:
+      # Postgresが接続を受け付けるまで起動を待つ。
+      # backendは起動時のDB接続失敗を再試行しないため、順序レースを防ぐ
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:16-alpine
+        command:
+        - sh
+        - -c
+        - until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER"; do echo waiting for postgres; sleep 2; done
+        env:
+        - name: POSTGRES_HOST
+          value: postgres
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: backstage
       containers:
       - name: backstage
         # ローカルビルドしてkind loadで配布する(READMEの手順を参照)
